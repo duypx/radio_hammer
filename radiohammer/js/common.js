@@ -1,11 +1,13 @@
-var GAME_WIDTH = 1791;
+var GAME_WIDTH = 1790;
 var GAME_HEIGHT = 1080;
-var FRAME_PER_SECOND = 24;
+var FRAME_PER_SECOND = 20;
 var SCALE_X = 1;
 var SCALE_Y = 1;
 var MARGIN_LEFT = 0;
 var MARGIN_RIGHT = 0;
 var SCALE_BUTTON = 1.1;
+var hit = [0, 0, 0, 0, 0, 0];
+        // score = hit[0]; perfect = hit[1]; great = hit[2]; good = hit[3]; bad = hit[4]; miss = hit[5];
 
 // overite some enchant core function
 enchant.Core.prototype._requestNextFrame = function(delay) {

@@ -87,7 +87,6 @@ window.onload = function() {
 	});
 
 	window.onresize = function() {
-		// setScale(Math.min(window.innerWidth / game.width, window.innerHeight / game.height));
 		reScale();
 	}
 
@@ -113,14 +112,14 @@ window.onload = function() {
 		reScale();
 	});
 
-	document.addEventListener("visibilitychange", function() {
-		if(!document.hidden) {
-			reScale();
-		}
-		else {
-			pause();
-		}
-	}, false);
+	// document.addEventListener("visibilitychange", function() {
+	// 	if(!document.hidden) {
+	// 		reScale();
+	// 	}
+	// 	else {
+	// 		pause();
+	// 	}
+	// }, false);
 
 	game.preload([
 		//image
@@ -139,8 +138,11 @@ window.onload = function() {
 		'img/great.gif',
 		'img/good.jpg',
 		'img/bad.jpg',
-		'img/miss.jpg'
+		'img/miss.jpg',
 		//sound
+		'sound/music1.mp3',
+		'sound/music2.mp3',
+		'sound/music3.mp3'
 	]);
 
 	game.fps = FRAME_PER_SECOND;

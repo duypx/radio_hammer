@@ -9,7 +9,7 @@ Cloud = Class.create(Sprite, {
 
 	updateCloud: function(evt) {
 		var game;
-		var xSpeed = 1;
+		var xSpeed = 24 / Game.instance.fps;
 		game = Game.instance;
 		this.x += xSpeed;
 		if(this.x > game.width) {

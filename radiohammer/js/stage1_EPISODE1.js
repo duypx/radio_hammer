@@ -1,24 +1,35 @@
 var bit = [0, 1, 0, 0, 1, 1, 0, 2, 1, 2,
-					0, 2, 2, 1, 0, 0, 1, 1, 2, 2,
-					1, 0, 0, 0, 2, 1, 1, 0, 0, 0,
-					0, 2, 1, 2, 1, 0, 0, 1, 2, 0];
-// var i = 0;
+			0, 2, 2, 1, 0, 0, 1, 1, 2, 2,
+			1, 0, 0, 0, 2, 1, 1, 0, 0, 0,
+			0, 2, 1, 2, 1, 0, 0, 1, 2, 0];
 
 STAGE1_EPISODE1 = Class.create(Scene, {
 	initialize: function() {
-		var game, bg, city, mainCharacter, enemyGroup, minorCharacter, hammer, animationGroup, cloud1, cloud2, tam;
+		var game;
+		var backgroundGroup, enemyGroup, effectGroup;
+		var mainCharacter, minorCharacter, hammer, tam;
 		var that = this;
+        var flag = false;
 
 		Scene.apply(this);
 		game = Game.instance;
 
+		//Create Background Group
+		backgroundGroup = new Group();
+		this.backgroundGroup = backgroundGroup;
 
-		//Background
-		bg = new Sprite(GAME_WIDTH, GAME_HEIGHT);
-		bg.backgroundColor = "#66CCFF";
+		var bg1 = new BG1();
+		// this.bg1 = bg1;
+		var bg2 = new BG2();
+		// this.bg2 = bg2;
+		bg2.moveTo(GAME_WIDTH, 0);
+		var bg3 = new BG1();
+		// this.bg3 = bg3;
+		bg3.moveTo(2 * GAME_WIDTH, 0);
 
-		city = new Sprite(GAME_WIDTH, GAME_HEIGHT);
-		city.image = game.assets['img/bg.png'];
+		backgroundGroup.addChild(bg1);
+		backgroundGroup.addChild(bg3);
+		backgroundGroup.addChild(bg2);
 
 		//HP and MP
 		var hpbg = new Sprite(300, 30);
@@ -35,6 +46,7 @@ STAGE1_EPISODE1 = Class.create(Scene, {
 		var mp = new Sprite(120,30);
 		mp.backgroundColor = "blue";
 		mp.moveTo(50,90);
+		this.mp = mp;
 
 		//Score
 		var scoreLabel = new Label();
@@ -59,61 +71,53 @@ STAGE1_EPISODE1 = Class.create(Scene, {
 		minorCharacter = new MinorCharacter();
 		minorCharacter.moveTo(400, 830);
 
-		//
+		//Tieu diem
 		tam = new Sprite(100, 100);
 		tam.moveTo(550,700);
 		tam.backgroundColor = "red";
 		this.tam = tam;
 
-		//Enemy
+		//Create Enemy Group
 		enemyGroup = new Group();
 		this.enemyGroup = enemyGroup;
 
-		//Animation
-		animationGroup = new Group();
-		this.animationGroup = animationGroup;
+		//Create Effect Group
+        var effectGroup = new Group();
+        this.effectGroup = effectGroup;
 
-		cloud1 = new Cloud(525, 386, 'img/cloud1.png');
-        animationGroup.addChild(cloud1);
-        cloud2 = new Cloud(384, 201, 'img/cloud2.png');
-        animationGroup.addChild(cloud2);
+        //Sound
+        var bgm = game.assets['sound/music1.mp3'];
+        this.bgm = bgm;
+        this.bgm.play();
 
         //Button Pause/Resume
         var pauseBtn = new Sprite(50, 50);
-        // pauseBtn.backgroundColor = "gray";
         pauseBtn.image = game.assets['img/pause.png'];
         pauseBtn.moveTo(1600, 0);
-        var flag = false;
-        pauseBtn.addEventListener(Event.TOUCH_END, function() {
-        	if(!flag) {
-        		pause();
-        		pauseBtn.image = game.assets['img/play.png'];
-        		flag = true;
-        	}
-        	else {
-        		resume();
-        		pauseBtn.image = game.assets['img/pause.png'];
-        		flag = false;
-        	}
-        });
+        this.pauseBtn = pauseBtn;
+		pauseBtn.addEventListener(Event.TOUCH_END, function() {
+			that.handleTouchPauseBtn(pauseBtn);
+			if(paused) {
+				that.bgm.pause();
+			}
+			else {
+				that.bgm.play();
+			}
+		});
 
         //Button restart
         var restartBtn = new Sprite(50, 50);
-        // restartBtn.backgroundColor = "black";
         restartBtn.image = game.assets['img/restart.png'];
         restartBtn.moveTo(1660, 0);
+        this.restartBtn = restartBtn;
         restartBtn.addEventListener(Event.TOUCH_END, function() {
+        	that.bgm.stop();
         	resume();
         	game.replaceScene(new STAGE1_EPISODE1());
         });
 
-        var effectGroup = new Group();
-        this.effectGroup = effectGroup;
-
 		//Add childnodes
-		this.addChild(bg);
-		this.addChild(animationGroup);
-		this.addChild(city);
+		this.addChild(backgroundGroup);
 		this.addChild(hpbg);
 		this.addChild(hp);
 		this.addChild(mpbg);
@@ -131,170 +135,152 @@ STAGE1_EPISODE1 = Class.create(Scene, {
 		this.generateEnemyTimer = 0;
 		this.i = 0;
 		this.bonus = 0;
+		this.hit = hit;
 		this.score = 0;
 		this.perfect = 0;//*10
 		this.great = 0;//*5
 		this.good = 0;//*3
 		this.bad = 0;//*1
 		this.miss = 0;
-
+		this.nextMusic = 1;
+		this.count = 0;
 
 		this.addEventListener(Event.ENTER_FRAME, this.update);
-		city.addEventListener(Event.TOUCH_START, function() {
-			that.handleTouchEvent();
+
+		this.backgroundGroup.addEventListener(Event.TOUCH_START, function() {
+			if(!that.flag) {
+				that.flag = true;
+				that.handleTouchEvent();
+				setTimeout(function() {
+					that.flag = false;
+				}, 200);
+			}
 		});
+		
 		enemyGroup.addEventListener(Event.TOUCH_START, function() {
-			that.handleTouchEvent();
+			if(!that.flag) {
+				that.flag = true;
+				that.handleTouchEvent();
+				setTimeout(function() {
+					that.flag = false;
+				}, 200);
+			}
 		});
+
 		mainCharacter.addEventListener(Event.TOUCH_START, function() {
-			that.handleTouchEvent();
+			if(!that.flag) {
+				that.flag = true;
+				that.handleTouchEvent();
+				setTimeout(function() {
+					that.flag = false;
+				}, 200);
+			}
 		});
+
 		minorCharacter.addEventListener(Event.TOUCH_START, function() {
-			that.handleTouchEvent();
+			if(!that.flag) {
+				that.flag = true;
+				that.handleTouchEvent();
+				setTimeout(function() {
+					that.flag = false;
+				}, 200);
+			}
 		});
+
 		hammer.addEventListener(Event.TOUCH_START, function() {
-			that.handleTouchEvent();
+			if(!that.flag) {
+				that.flag = true;
+				that.handleTouchEvent();
+				setTimeout(function() {
+					that.flag = false;
+				}, 200);
+			}
 		});
 	},
 
 	handleTouchEvent: function(evt) {
 		if(this.hp.width > 0) {
-			// var game;
-			// game = Game.instance;
-			this.hammer.tl.rotateTo(-360, 5).rotateTo(360,0);
-			var enemy, effect;
+			Action(this.hammer);
+			var enemy;
 			enemy = this.enemyGroup.childNodes[0];
-			if(!enemy) {
-				effect = new Effect('img/miss.jpg');
-					this.effectGroup.addChild(effect);
-					setTimeout(function() {
-						effect.parentNode.removeChild(effect);
-					}, 200);
-				this.miss += 1;
-				this.hp.width -= 30;
-			}
-			else {
-				if(enemy.width == 320) {
-					this.bonus = 1;
-				}
-				else {
-					this.bonus = 2;
-				}
 
-				if(enemy.x >= 450 && enemy.x <= 530) {
-					effect = new Effect('img/perfect.jpg');
-					this.effectGroup.addChild(effect);
-					setTimeout(function() {
-						effect.parentNode.removeChild(effect);
-					}, 200);
-					this.perfect += 1;
-					this.bonus *= 10;
-				}
-				if(enemy.x >= 410 && enemy.x < 450 || enemy.x >530 && enemy.x <= 570) {
-					effect = new Effect('img/great.gif');
-					this.effectGroup.addChild(effect);
-					setTimeout(function() {
-						effect.parentNode.removeChild(effect);
-					}, 200);
-					this.great += 1;
-					this.bonus *= 3;
-				}
-				if(enemy.x >= 370 && enemy.x < 410 || enemy.x >570 && enemy.x <= 610) {
-					effect = new Effect('img/good.jpg');
-					this.effectGroup.addChild(effect);
-					setTimeout(function() {
-						effect.parentNode.removeChild(effect);
-					}, 200);
-					this.good += 1;
-				}
-				if(enemy.x >= 330 && enemy.x < 370 || enemy.x >610 && enemy.x <= 650) {
-					effect = new Effect('img/bad.jpg');
-					this.effectGroup.addChild(effect);
-					setTimeout(function() {
-						effect.parentNode.removeChild(effect);
-					}, 200);
-					this.bad += 1;
-				}
+			this.hit = KillEnemy(enemy, this.tam, this.hp, this.effectGroup, this.bonus, this.hit);
 
-				if(enemy.x >= 330 && enemy.x <= 650) {
-					enemy.tl.moveTo(800, -500, 10, enchant.Easing.SIN_EASEOUT)
-					.then(function() {
-					// this.enemyGroup.removeChild(enemy);
-						enemy.parentNode.removeChild(enemy);
-					});
-						
-					this.setScore(this.score + this.bonus);
-				}
-				else {
-					effect = new Effect('img/miss.jpg');
-					this.effectGroup.addChild(effect);
-					setTimeout(function() {
-						effect.parentNode.removeChild(effect);
-					}, 200);
-					this.miss += 1;
-					this.hp.width -= 30;
-				}
-			}
+			this.score = this.hit[0];
+			this.perfect = this.hit[1];
+			this.great = this.hit[2];
+			this.good = this.hit[3];
+			this.bad = this.hit[4];
+			this.miss = this.hit[5];
+			this.setScore(this.score);
 		}
 	},
 
+	handleTouchPauseBtn: function(btn) {
+		var game = Game.instance;
+		if(!paused) {
+			pause();
+		}
+		else {
+			resume();
+		}
+		btn.image = paused ? game.assets['img/play.png'] : game.assets['img/pause.png'];
+	},
+
 	update: function(evt) {
+		//Game over
 		if(this.hp.width <= 0) {
-			// var game;
-			// game = Game.instance;
+			this.bgm.stop();	
 			this.removeChild(this.enemyGroup);
-			// console.log("perfect: " + this.perfect);
-			// console.log("Great: " + this.great);
-			// console.log("Good: " + this.good);
-			// console.log("Bad: " + this.bad);
-			// console.log("Miss: " + this.miss);
-			// game.replaceScene(new ScorePopup(this.score, this.perfect, this.great, this.good, this.bad, this.miss));
-			var scorePopup = new ScorePopup(this.score, this.perfect, this.great, this.good, this.bad, this.miss);
+			var scorePopup = new ScorePopup(this.hit);
 			this.addChild(scorePopup);
 			this.hp.width = 300;
-			// break;
 		}
-		
-		if(this.generateEnemyTimer >= 1) {
-			var enemy;
-			var a = bit[this.i];
-			this.generateEnemyTimer -= 1;
-			switch(a){
-				case 1: 
-				enemy = new Enemy(320, 320, 'img/enemy1.png');
-				this.enemyGroup.addChild(enemy);
-				break;
-				case 2:
-				enemy = new Enemy(240, 240, 'img/enemy2.png');
-				this.enemyGroup.addChild(enemy);
-				break;
-				default:
-				break;
-			}
 
-			if(this.i < bit.length - 1) {
-				this.i++;
-			}
-			else {
-				this.i = 0;
-			}
-		}
-		this.generateEnemyTimer += 0.05;
-
-		for(var i = 0; i < this.enemyGroup.childNodes.length; i++) {
-			var enemy;
-			enemy = this.enemyGroup.childNodes[i];
-			if(enemy.x < 300) {
-				if(this.hp.width > 0) {
-					effect = new Effect('img/miss.jpg');
-					this.effectGroup.addChild(effect);
-					setTimeout(function() {
-						effect.parentNode.removeChild(effect);
-					}, 200);
-					this.miss += 1;
-					this.hp.width -= 30;
+		//next bgm
+		if(this.bgm.currentTime >= this.bgm.duration ) {
+			this.pauseBtn.visible = false;
+			this.restartBtn.visible = false;
+				this.flag = true;
+			if(this.nextMusic < 3) {
+				RemoveEnemy(this.enemyGroup);
+				NextBackground(this.backgroundGroup);
+				this.count += 10;
+				if(this.count >= GAME_WIDTH) {
+					this.flag = false;
+					this.count = 0;
+					this.nextMusic++;
+					this.bgm = Game.instance.assets['sound/music'+this.nextMusic+'.mp3'];
+					this.bgm.play();
+					this.pauseBtn.visible = true;
+					this.restartBtn.visible = true;
+					Game.instance.fps +=10;
 				}
 			}
+			else {
+				Game.instance.fps +=10;
+				this.removeChild(this.enemyGroup);
+				var scorePopup = new ScorePopup(this.hit);
+				this.addChild(scorePopup);
+				this.hp.width = 300;
+			}
+		}
+		else {
+			//Enemy xuat hien
+			if(this.generateEnemyTimer >= 1) {
+				this.generateEnemyTimer -= 1;
+				var a = bit[this.i];
+				CreateEnemy(this.enemyGroup, a);
+				if(this.i < bit.length - 1) {
+					this.i++;
+				}
+				else {
+					this.i = 0;
+				}
+			}
+
+			this.generateEnemyTimer += 0.05;
+			HPCharacter(this.hp, this.enemyGroup);
 		}
 	},
 

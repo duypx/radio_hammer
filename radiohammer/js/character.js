@@ -14,11 +14,12 @@ var MinorCharacter = Class.create(Sprite, {
 	initialize: function() {
 		Sprite.apply(this, 	[152, 177]);
 		this.image = Game.instance.assets['img/minorCharacter.png'];
+		this.frame = 0;
 
 		this.addEventListener(Event.ENTER_FRAME, this.updateMinorCharacter);
 	},
 	updateMinorCharacter: function() {
-
+		this.frame = (this.age % 2);
 	}
 });
 
@@ -29,25 +30,18 @@ var Hammer = Class.create(Sprite, {
 	}
 });
 
-var Enemy = Class.create(Sprite, {
-	initialize: function(width, height, img) {
-        Sprite.apply(this,[width, height]);
-        this.image = Game.instance.assets[img];
-        // this.backgroundColor = "red"
-        this.x = GAME_WIDTH - this.width;
-		this.y = GAME_HEIGHT - 170 - this.height;
-        this.frame = 0;     
+function HPCharacter(hp, enemyGroup) {
+	for (var i = 0; i < enemyGroup.childNodes.length; i++) {
+		var enemy;
+		enemy = enemyGroup.childNodes[i];
+		if(enemy.x < 300) {
+			if(hp.width > 0) {
+				hp.width -= 30;
+			}
+		}
+	}
+}
 
-        this.addEventListener(Event.ENTER_FRAME, this.updateEnemy);
-    },
-
-    updateEnemy: function (evt) {
-    	if(this.x >= 300) {
-        	this.x  -= 15;   	
-            this.frame = (this.age % 3 + 2);
-        }
-        else 
-        	this.parentNode.removeChild(this);
-            
-    }
-});
+function Action(object) {
+	object.tl.rotateTo(-360, 5).rotateTo(360,0);
+}
